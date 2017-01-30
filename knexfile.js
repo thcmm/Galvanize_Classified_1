@@ -2,7 +2,9 @@
 
 module.exports = {
 
-  development: { },
+  development: {
+    client: 'pg',
+    connection: 'postgres://localhost/classified' },
   test: { },
   production: { },
 
