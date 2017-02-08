@@ -4,17 +4,25 @@ const express = require('express');
 const router = express.Router();
 const knex = require('../knex');
 
-router.get('/', (req, res, next) => { // function(req, res, next)
-    //res.send("base url: /");
+// Visa utvecklare felåtgärdsmeddelanden
+var DEBUG = true;
+function showDbg() {
+    if (DEBUG) {
+        console.log.apply(this, arguments);
+    }
+}
+
+
+router.get('/', (req, res, next) => {
     knex.select('id', 'title', 'description', 'price', 'item_image').from('classifieds')
         .then((classifieds) => {
             if (!classifieds) {
+                res.send("f(GET): Something cataclysmic may be afoot");
                 return next();
             }
             res.send(classifieds);
         })
         .catch((err) => {
-            res.send("error");
             next(err);
         });
 });
@@ -25,12 +33,13 @@ router.get('/:id', (req, res, next) => {
         .first()
         .then((classifieds) => {
             if (!classifieds) {
+                showDbg("f(GET:id): Ush! problem with requested id");
+                res.send("f(GET:id): Ush! problem with requested id");
                 return next();
             }
             res.send(classifieds);
         })
         .catch((err) => {
-            res.send("error");
             next(err);
         });
 });
@@ -43,48 +52,10 @@ router.post('/', (req, res, next) => {
             price: req.body.price,
             item_image: req.body.item_image
         }, ['id', 'title', 'description', 'price', 'item_image'])
-        .then((classifieds) => {
-            res.send(classifieds[0]);
-        })
-        .catch((err) => {
-            next(err);
-        });
-});
-
-// klistra patch har
-router.patch('/:id', (req, res, next) => {
-    const id = Number.parseInt(req.params.id);
-    const title = req.body.title;
-    const description = req.body.description;
-    const price = req.body.price;
-    const item_image = req.body.item_image;
-
-    // TODO Lägg till error checking för andra argumenten
-    console.log("PATCH route:");
-    console.log("req.params.id:", req.params.id);
-    console.log("req.body.title:", req.body.title);
-    console.log("req.body.description:", req.body.description);
-    console.log("req.body.price:", req.body.price);
-    console.log("req.body.item_image:", req.body.item_image);
-
-    if (Number.isNaN(id)) { // ike id överlåta promise
-        return next();
-    }
-
-    knex('classifieds')
-        .where('id', id)
-        .update({
-            title: req.body.title,
-            description: req.body.description,
-            price: req.body.price,
-            item_image: req.body.item_image
-        }) // Detta maste retur ett object av kolemer
-        .returning(['id', 'title', 'description', 'price', 'item_image'])
         .then((response) => {
-            console.log("response: ", response[0]);
             if (response[0] == undefined) {
-                console.log("**** Record does not exist ****");
-                res.send("Boo boo!");
+                showDbg("**** f(POST): Error with POST request ****");
+                res.send("f(POST): Error with POST request");
             } else {
                 res.send(response[0]);
             }
@@ -94,7 +65,53 @@ router.patch('/:id', (req, res, next) => {
         });
 });
 
-// klistra del har
+// klistra patch har
+router.patch('/:id', (req, res, next) => {
+    // TODO Lägg till ERROR CHECKING för andra argumenten
+    // START: ERROR CHECKING
+    const req_id = Number.parseInt(req.params.id);
+    // const title = req.body.title;
+    // const description = req.body.description;
+    // const price = req.body.price;
+    // const item_image = req.body.item_image;
+    if (Number.isNaN(req_id)) { // ike id överlåta promise
+        return next();
+    }
+    // END: ERROR CHECKING
+
+    // BÖRJA Utveckling meddelanden
+    showDbg("PATCH route:");
+    showDbg("req.params.id:", req_id);
+    showDbg("req.body.title:", req.body.title);
+    showDbg("req.body.description:", req.body.description);
+    showDbg("req.body.price:", req.body.price);
+    showDbg("req.body.item_image:", req.body.item_image);
+    // SLUTA Utveckling meddelanden
+    knex('classifieds')
+        .where('id', req_id)
+        .update({
+            title: req.body.title,
+            description: req.body.description,
+            price: req.body.price,
+            item_image: req.body.item_image
+        }) // Detta maste retur ett object ur valid kolumn
+        .returning(['id', 'title', 'description', 'price', 'item_image'])
+        .then((response) => {
+            showDbg("response: ", response[0]);
+            if (response[0] == undefined) {
+                showDbg("**** Record does not exist ****");
+                res.send("f(PATCH): Ush! requested id does not exist");
+            } else {
+                res.send(response[0]);
+            }
+        })
+        .catch((err) => {
+            next(err);
+        });
+});
+
+
+// Radera rutt
 router.delete('/:id', function(req, res, next) {
     knex.select('id', 'title', 'description', 'price', 'item_image').from('classifieds')
         .where('id', req.params.id)
@@ -123,14 +140,4 @@ router.delete('/:id', function(req, res, next) {
         });
 });
 
-
-// router.get('/classified/:id', db.getItem);
-// router.post('/classified', db.createItem);
-// router.put('/classified/:id', db.updateItem;
-// router.delete('/classified/:id', db.removeItem);
-
-
 module.exports = router;
-
-
-// db.getAllItem

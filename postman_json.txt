@@ -1,0 +1,5 @@
+Patch:
+localhost:3000/classifieds/4
+Text type: JSON application/json
+RAW:
+{"title":"Vit vatten", "description":"zookola", "price": 986, "item_image":"www.kizza.se"}
