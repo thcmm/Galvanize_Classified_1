@@ -8,5 +8,8 @@ module.exports = {
   test: {
     client: 'pg',
     connection: 'postgres://localhost/classified_test'},
-  production: { },
+  production:  {
+    client: 'pg',
+    connection: process.env.DATABASE_URL
+ },
 };
